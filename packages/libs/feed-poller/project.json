@@ -1,0 +1,89 @@
+{
+  "name": "feed-poller",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/libs/feed-poller/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/libs/feed-poller",
+        "main": "packages/libs/feed-poller/src/index.ts",
+        "additionalEntryPoints": ["packages/libs/feed-poller/src/local.ts"],
+        "tsConfig": "packages/libs/feed-poller/tsconfig.lib.json",
+        "assets": ["packages/libs/feed-poller/*.md"],
+        "generatePackageJson": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/libs/feed-poller/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/libs/feed-poller/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "build-local": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/packages/libs/feed-poller",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "packages/libs/feed-poller/src/local.ts",
+        "tsConfig": "packages/libs/feed-poller/tsconfig.lib.json",
+        "assets": ["packages/libs/feed-poller/*.md"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "run-local": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "feed-poller:build-local"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "feed-poller:build-local:development"
+        },
+        "production": {
+          "buildTarget": "feed-poller:build-local:production"
+        }
+      }
+    }
+  },
+  "tags": []
+}

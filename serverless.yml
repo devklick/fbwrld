@@ -1,0 +1,78 @@
+service: football-game-service
+variablesResolutionMode: 20210219
+
+plugins:
+  - serverless-deployment-bucket
+  - serverless-localstack
+  # Note: Although there's some more popular S3 sync plugins out there, most of them failed on LocalStack with:
+  #   "Error: Non-file stream objects are not supported with SigV4"
+  #     at Object.computeSha256 (node_modules/aws-sdk/lib/util.js:754:23)
+  # - serverless-sync-s3
+
+provider:
+  name: aws
+  stage: ${opt:stage,'local'}
+  region: eu-west-2
+  stackName: fbwrld
+  timeout: 15
+  deploymentBucket:
+    name: ${self:custom.deploymentBucket.${self:provider.stage}}
+
+package:
+  excludeDevDependencies: true
+  include:
+    - "node_modules/**"
+    - "dist/packages"
+
+custom:
+  region: eu-west-2
+  accountID: '000000000000'
+  localstack:
+    stages: [local]
+    host: http://127.0.0.1
+    debug: true
+    # Note: enable this configuration to automatically start up a LocalStack container in the background
+#    autostart: true
+    # lambda:
+    #   mountCode: true
+  deploymentBucket:
+    local: localstack-test-bucket
+    aws: localstack-test-bucket-53194
+
+functions:
+  feedPollerHandleEventBridgeEvent:
+    name: feed-poller
+    description: Fetches football match data on a schedule and publishes to SNS
+    handler: dist/packages/libs/feed-poller/index.handler
+    runtime: nodejs18.x
+    events:
+      - eventBridge:
+          name: poll-external-matches
+          description: Invokes the feed poller to fetch matches from an external source
+          enabled: true
+          schedule: rate(1 minutes)
+    environment: ${file(packages/libs/feed-poller/${opt:stage, 'local'}.env.json)}
+
+resources:
+  Resources:
+    matchNotification:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: match-notification
+    feedPollerHandleEventBridgeEventRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: !Sub 'states.${AWS::Region}.amazonaws.com'
+              Action: 'sts:AssumeRole'
+        Policies:
+          - PolicyName: lambda
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action: sns:Publish*
+                  Resource: 'arn:aws:sqs:eu-west-2:*:matchNotification'

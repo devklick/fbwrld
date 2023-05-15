@@ -2,6 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "rootDir": ".",
+    "noPropertyAccessFromIndexSignature": false,
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -13,8 +14,12 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "strict": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@fbwrld/env-json": ["packages/libs/env-json/src/index.ts"],
+      "@fbwrld/feed-poller": ["packages/libs/feed-poller/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

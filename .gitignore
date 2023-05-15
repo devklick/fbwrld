@@ -37,3 +37,12 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Normal .env files
+*.env
+
+# Env json files
+*.env.json
+
+# Serverless
+.serverless/*
